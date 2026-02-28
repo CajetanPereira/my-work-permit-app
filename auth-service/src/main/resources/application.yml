@@ -1,0 +1,22 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/workpermit_auth}
+    username: ${SPRING_DATASOURCE_USERNAME:workpermit}
+    password: ${SPRING_DATASOURCE_PASSWORD:workpermit}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:my-super-secret-jwt-key-my-super-secret-jwt-key}
+    expiration-seconds: 3600

@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: workpermit_auth
+      POSTGRES_USER: workpermit
+      POSTGRES_PASSWORD: workpermit
+    ports:
+      - "5432:5432"
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/workpermit_auth
+      SPRING_DATASOURCE_USERNAME: workpermit
+      SPRING_DATASOURCE_PASSWORD: workpermit
+      JWT_SECRET: my-super-secret-jwt-key-my-super-secret-jwt-key
+    depends_on:
+      - postgres
+    ports:
+      - "8081:8081"
+
+  permit-service:
+    build:
+      context: .
+      dockerfile: permit-service/Dockerfile
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/workpermit
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      JWT_SECRET: my-super-secret-jwt-key-my-super-secret-jwt-key
+    depends_on:
+      - mongo
+      - redis
+    ports:
+      - "8082:8082"
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8081
+      PERMIT_SERVICE_URL: http://permit-service:8082
+      JWT_SECRET: my-super-secret-jwt-key-my-super-secret-jwt-key
+    depends_on:
+      - auth-service
+      - permit-service
+    ports:
+      - "8080:8080"
